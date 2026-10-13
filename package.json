@@ -1,0 +1,28 @@
+{
+  "name": "whiteboard",
+  "productName": "Whiteboard",
+  "version": "1.1.1",
+  "description": "Offline drawing app for Mac. N1,000 one-time.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac"
+  },
+  "author": "ststudiosng",
+  "license": "UNLICENSED",
+  "build": {
+    "appId": "com.ststudiosng.whiteboard",
+    "productName": "Whiteboard",
+    "files": ["main.js", "preload.js", "license.js", "activate.html", "board.html", "package.json"],
+    "mac": {
+      "icon": "icon.icns",
+      "category": "public.app-category.productivity",
+      "target": ["zip", "dmg"],
+      "identity": null
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.0.0"
+  }
+}
