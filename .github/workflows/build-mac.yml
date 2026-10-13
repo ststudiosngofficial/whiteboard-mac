@@ -31,3 +31,21 @@ jobs:
             dist/*.dmg
             dist/*.zip
           if-no-files-found: error
+      # Visual smoke test (arm64 only): launch the app, screenshot the locked board.
+      - name: Smoke test (launch + screenshot)
+        if: matrix.arch == 'arm64'
+        run: |
+          APP="dist/mac-arm64/Whiteboard.app"
+          ls "$APP/Contents/MacOS"
+          xattr -dr com.apple.quarantine "$APP" || true
+          open "$APP"
+          sleep 25
+          pgrep -fl "Whiteboard" || (echo "APP_NOT_RUNNING" && exit 1)
+          screencapture -x -t png /tmp/whiteboard-smoke.png
+          ls -la /tmp/whiteboard-smoke.png
+      - uses: actions/upload-artifact@v4
+        if: matrix.arch == 'arm64'
+        with:
+          name: smoke-screenshot
+          path: /tmp/whiteboard-smoke.png
+          if-no-files-found: error
