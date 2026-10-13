@@ -56,6 +56,7 @@ function openActivation() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, devTools: false }
   });
   actWin.setMenu(null);
+  actWin.webContents.on('page-title-updated', (e) => { e.preventDefault(); });
   actWin.loadFile(path.join(__dirname, 'activate.html'), { query: { pid: getProductId() } });
   actWin.on('closed', () => { actWin = null; });
 }
@@ -67,6 +68,9 @@ function createBoard(locked) {
     title: locked ? 'Whiteboard (Locked - pay to unlock)' : 'Whiteboard',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, devTools: false }
   });
+  // The board page sets document.title per file ("Untitled — Whiteboard" etc).
+  // We manage window titles ourselves, so ignore page titles.
+  boardWin.webContents.on('page-title-updated', (e) => { e.preventDefault(); });
   const query = { win: 'app' };
   if (locked) query.locked = '1';
   boardWin.loadFile(path.join(__dirname, 'board.html'), { query: query });
