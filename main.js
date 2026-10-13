@@ -34,6 +34,7 @@ function saveCode(code) {
 
 function unlockBoard() {
   if (boardWin && !boardWin.isDestroyed()) {
+    boardWin._wantTitle = 'Whiteboard';
     boardWin.setTitle('Whiteboard');
     boardWin.webContents.executeJavaScript('if(window.__wbUnlock)window.__wbUnlock();').catch(() => {});
   }
@@ -56,7 +57,10 @@ function openActivation() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, devTools: false }
   });
   actWin.setMenu(null);
-  actWin.webContents.on('page-title-updated', (e) => { e.preventDefault(); });
+  actWin.webContents.on('page-title-updated', (e) => {
+    e.preventDefault();
+    try { if (!actWin.isDestroyed()) actWin.setTitle('Whiteboard Activation'); } catch (err) {}
+  });
   actWin.loadFile(path.join(__dirname, 'activate.html'), { query: { pid: getProductId() } });
   actWin.on('closed', () => { actWin = null; });
 }
@@ -68,9 +72,14 @@ function createBoard(locked) {
     title: locked ? 'Whiteboard (Locked - pay to unlock)' : 'Whiteboard',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, devTools: false }
   });
-  // The board page sets document.title per file ("Untitled — Whiteboard" etc).
-  // We manage window titles ourselves, so ignore page titles.
-  boardWin.webContents.on('page-title-updated', (e) => { e.preventDefault(); });
+  // The board page rewrites document.title per file ("Untitled — Whiteboard").
+  // Electron adopts page titles into the window title, so re-assert ours
+  // every time the page tries to change it.
+  boardWin._wantTitle = locked ? 'Whiteboard (Locked - pay to unlock)' : 'Whiteboard';
+  boardWin.webContents.on('page-title-updated', (e) => {
+    e.preventDefault();
+    try { if (!boardWin.isDestroyed()) boardWin.setTitle(boardWin._wantTitle); } catch (err) {}
+  });
   const query = { win: 'app' };
   if (locked) query.locked = '1';
   boardWin.loadFile(path.join(__dirname, 'board.html'), { query: query });
